@@ -32,11 +32,26 @@ top_1k_long <- all_data_top_1k %>%
   arrange(song_id, user) %>% 
   group_by(song_id) 
 
+all_data_top_1k %>% ungroup() %>% select(-c(user, plays))
+  
+
 view_songinfo <- function(tbl, left_join_col_name=song_id){
   tbl %>% rename(
     song_id = {{left_join_col_name}}
   ) -> tbl 
   tbl %>% left_join(song_data, by = 'song_id')
+}
+view_songinfo <- function(tbl, left_join_col_name=song_id){
+  tbl %>% rename(
+    song_id = {{left_join_col_name}}
+  ) -> tbl 
+  
+  song_data_1k <- all_data_top_1k %>% 
+    ungroup() %>% 
+    select(-c(user, plays)) %>% 
+    distinct(song_id, .keep_all=TRUE)
+  
+  tbl %>% left_join(song_data_1k, by = 'song_id')
 }
 calc_dot_product <- function(vec_x, vec_y){
   
@@ -77,6 +92,7 @@ generate_song_list_by_cos_sim <- function(song_id_x, input_tbl){
     arrange(-cos_sim) %>% view_songinfo()
 } 
 
+# Test 
 generate_song_list_by_cos_sim("SODEOCO12A6701E922", all_data_top_1k) -> vdf 
 generate_song_list_by_cos_sim('SOPJLFV12A6701C797', all_data_top_1k) -> vdf 
 generate_song_list_by_cos_sim('SOJYBJZ12AB01801D0', all_data_top_1k) -> vdf 
