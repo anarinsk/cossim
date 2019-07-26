@@ -26,44 +26,57 @@ top_1k_songs <- all_data %>%
 all_data_top_1k <- all_data %>%
   inner_join(top_1k_songs)
 
-top_1k_wide <- all_data_top_1k %>%
+top_1k_long <- all_data_top_1k %>%
   ungroup() %>%
-  distinct(user, song_id, plays) %>%
-  spread(song_id, plays, fill = 0)
+  distinct(user, song_id, plays) %>% 
+  arrange(song_id, user) %>% 
+  group_by(song_id) 
 
-view_songinfo <- function(tbl, left_join_col_name){
+view_songinfo <- function(tbl, left_join_col_name=song_id){
   tbl %>% rename(
     song_id = {{left_join_col_name}}
   ) -> tbl 
   tbl %>% left_join(song_data, by = 'song_id')
 }
-calc_cos_sim <- function(song_code, input_tbl){
-#  
-  input_tbl %>% select(-user) -> fbl0 
-  fbl0 %>% 
-    mutate_at(vars(-{{song_code}}), ~ . * {{song_code}}) %>% 
-    summarise_all( ~sum(.) ) -> dot_product
+calc_dot_product <- function(vec_x, vec_y){
   
-  fbl0 %>% 
-    mutate_all(~ .^2) %>% 
-    summarise_all( ~sqrt(sum(.)) ) -> norm 
+  vec_x %>% ungroup() %>% select(user, plays) -> vec_x
+  vec_y %>% ungroup() %>% select(user, plays) -> vec_y
   
-  norm %>% 
-    mutate_at(vars(-{{song_code}}), ~ . * {{song_code}}) -> denom
-  
-  (dot_product / denom) %>% 
-    tidyr::gather() %>% 
-    filter(between(value, -1, 1)) %>% 
-    arrange(-value) 
-# 
+  vec_x %>% 
+    full_join(vec_y, by = 'user') %>% 
+    replace_na(list(plays.x = 0, plays.y = 0)) %>% 
+    mutate(
+      prod = plays.x * plays.y
+    ) %>% 
+    summarise(
+      norm.x = sqrt(sum(plays.x^2)), 
+      norm.y = sqrt(sum(plays.y^2)), 
+      dot_prod = sum(prod)
+    ) %>%  
+    mutate(
+      cos_sim = dot_prod / (norm.x * norm.y)
+    )
 }
 
-### Test 
-calc_cos_sim(SOIHUUT12AF72A2188, top_1k_wide) %>% view_songinfo(key) -> vdf 
-calc_cos_sim(SOIHUUT12AF72A2188, top_1k_wide) -> vdf 
+# Wrapping function 
+generate_song_list_by_cos_sim <- function(song_id_x, input_tbl){
+  
+  input_tbl -> tblf0 
+  
+  tblf1 <- tblf0 %>%
+    ungroup() %>%
+    distinct(user, song_id, plays) %>% 
+    arrange(song_id, user) 
+  
+  tblf1 %>% filter(song_id == song_id_x) -> vector_x 
+  
+  tblf1 %>% 
+    group_by(song_id) %>% 
+    group_modify( ~ calc_dot_product(vector_x, .)) %>% 
+    arrange(-cos_sim) %>% view_songinfo()
+} 
 
-
-view_songinfo(top_1k_songs, song_id) -> vdf 
-
-vdf %>% 
-  rename(key = song_id)
+generate_song_list_by_cos_sim("SODEOCO12A6701E922", all_data_top_1k) -> vdf 
+generate_song_list_by_cos_sim('SOPJLFV12A6701C797', all_data_top_1k) -> vdf 
+generate_song_list_by_cos_sim('SOJYBJZ12AB01801D0', all_data_top_1k) -> vdf 
