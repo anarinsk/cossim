@@ -1,10 +1,15 @@
-#librarian::shelf(hadley/tidyr)
-#devtools::install_github("tidyverse/tidyr", INSTALL_opts = c('--no-lock'))
-#install.packages('Rcpp', INSTALL_opts = c('--no-lock'))
+#devtools::install_github("yihui/xfun") 
+#install.packages("Rcpp", dependencies=TRUE, INSTALL_opts = c('--no-lock'))
+#install.packages("testthat", dependencies=TRUE, INSTALL_opts = c('--no-lock'))
+#devtools::install_github("tidyverse/tidyverse", dependencies=TRUE, INSTALL_opts = c('--no-lock'))
+#devtools::install_github("tidyverse/tidyr", INSTALL_opts = c('--no-lock')
+
 #devtools::install_github('rstudio/fontawesome')
 #devtools::install_github('juba/rmdformats')
+#install.packages('DT')
+#install.packages('showtext')
 
-librarian::shelf(tidyverse, tidyr, DT, showtext)
+xfun::pkg_attach(c("tidyverse", 'DT', 'showtext'))
 
 all_data_top_1k <- readRDS("all_data_top_1k.rds")
 
