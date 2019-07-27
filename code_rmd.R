@@ -25,7 +25,7 @@ view_songinfo <- function(tbl, left_join_col_name=song_id){
   
   tbl %>% left_join(song_data_1k, by = 'song_id')
 }
-calc_dot_product <- function(vec_x, vec_y){
+calc_cos_sim <- function(vec_x, vec_y){
   
   vec_x %>% ungroup() %>% select(user, plays) -> vec_x
   vec_y %>% ungroup() %>% select(user, plays) -> vec_y
@@ -60,6 +60,6 @@ generate_song_list_by_cos_sim <- function(song_id_x, input_tbl){
   
   tblf1 %>% 
     group_by(song_id) %>% 
-    group_modify( ~ calc_dot_product(vector_x, .)) %>% 
+    group_modify( ~ calc_cos_sim(vector_x, .)) %>% 
     arrange(-cos_sim) %>% view_songinfo()
 } 

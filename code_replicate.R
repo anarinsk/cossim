@@ -1,8 +1,11 @@
 #librarian::shelf(hadley/tidyr)
 #devtools::install_github("tidyverse/tidyr", INSTALL_opts = c('--no-lock'))
-librarian::shelf(tidyverse, tidyr)
+#librarian::shelf(tidyverse, tidyr)
+xfun::pkg_attach(c("tidyverse"))
 
-# read user play data and song data from the internet
+#
+all_data_top_1k %>% ungroup() %>% select(-c(user, plays))
+ read user play data and song data from the internet
 play_data <- "https://static.turi.com/datasets/millionsong/10000.txt" %>%
   read_tsv(col_names = c('user', 'song_id', 'plays'))
 
@@ -31,16 +34,7 @@ top_1k_long <- all_data_top_1k %>%
   distinct(user, song_id, plays) %>% 
   arrange(song_id, user) %>% 
   group_by(song_id) 
-
-all_data_top_1k %>% ungroup() %>% select(-c(user, plays))
   
-
-view_songinfo <- function(tbl, left_join_col_name=song_id){
-  tbl %>% rename(
-    song_id = {{left_join_col_name}}
-  ) -> tbl 
-  tbl %>% left_join(song_data, by = 'song_id')
-}
 view_songinfo <- function(tbl, left_join_col_name=song_id){
   tbl %>% rename(
     song_id = {{left_join_col_name}}
@@ -53,7 +47,7 @@ view_songinfo <- function(tbl, left_join_col_name=song_id){
   
   tbl %>% left_join(song_data_1k, by = 'song_id')
 }
-calc_dot_product <- function(vec_x, vec_y){
+calc_cos_sim <- function(vec_x, vec_y){
   
   vec_x %>% ungroup() %>% select(user, plays) -> vec_x
   vec_y %>% ungroup() %>% select(user, plays) -> vec_y
@@ -88,7 +82,7 @@ generate_song_list_by_cos_sim <- function(song_id_x, input_tbl){
   
   tblf1 %>% 
     group_by(song_id) %>% 
-    group_modify( ~ calc_dot_product(vector_x, .)) %>% 
+    group_modify( ~ calc_cos_sim(vector_x, .)) %>% 
     arrange(-cos_sim) %>% view_songinfo()
 } 
 
