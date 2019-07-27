@@ -4,8 +4,6 @@
 xfun::pkg_attach(c("tidyverse"))
 
 #
-all_data_top_1k %>% ungroup() %>% select(-c(user, plays))
- read user play data and song data from the internet
 play_data <- "https://static.turi.com/datasets/millionsong/10000.txt" %>%
   read_tsv(col_names = c('user', 'song_id', 'plays'))
 
